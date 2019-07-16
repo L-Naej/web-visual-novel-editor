@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Visual Novel</title>
+
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+
+    <div id="screen">
+        <div id="scene">
+          <img id="background" src=""/>
+
+          <div id="character-left" class="character">
+              <img id="chara" src=""/>
+          </div>
+          <div id="character-center" class="character"></div>
+          <div id="character-right" class="character">
+            <img src=""/>
+          </div>
+        </div>
+
+        <div id="ui">
+          <section id="description">
+          </section>
+          <section id="interaction"></section>
+
+        </div>
+    </div>
+
+    <div id="modal" style="display:none"></div>
+
+    <script>
+
+      const backgrounds = [
+        {
+          id: 1,
+          src: 'img/forest-backgrounds/PNG/Cartoon_Forest_BG_01/Cartoon_Forest_BG_01.png'
+        },
+        {
+          id: 2,
+          src: 'img/forest-backgrounds/PNG/Cartoon_Forest_BG_02/Cartoon_Forest_BG_02.png'
+        }
+      ];
+
+      const characters = [
+        {
+          id: 1,
+          src: 'img/character-sprites/Fallen_Angels_2/PNG/PNG Sequences/Idle/0_Fallen_Angels_Idle_000.png'
+        },
+        {
+          id: 2,
+          src: 'img/character-sprites/test-character.png'
+        }
+      ];
+
+      const adventure = [
+        {
+          id: 0,
+          text: 'Bienvenue dans le donjon.',
+          background: 1,
+          character: 1,
+          choices: [
+            {
+              goto: 1,
+              text: 'Aller tout droit.'
+            },
+            {
+              goto: 2,
+              text: 'Aller à gauche.'
+            }
+          ]
+        },
+        {
+          id: 1,
+          text: 'Vous êtes allé tout droit.',
+          background: 2,
+          character: 2
+        },
+        {
+          id: 2,
+          text: 'Vous êtes allé à gauche.',
+          background: '',
+          character: 2
+        }
+      ];
+
+      const sceneHtml = document.getElementById("scene");
+      const backgroundHTML = document.getElementById("background");
+      const description = document.getElementById("description");
+      const interaction = document.getElementById("interaction");
+
+      function displayDescription(sceneId) {
+        interaction.style.display = "none";
+        //Delete interaction content.
+        while (interaction.firstChild) {
+          interaction.removeChild(interaction.firstChild);
+        }
+
+        description.style.display = "block";
+
+        const scene = adventure.find( (s) => s.id === sceneId);
+        description.innerText = scene.text;
+
+        const bgId = parseInt(scene.background)
+        if(bgId !== undefined) {
+          const background = backgrounds.find( b => b.id === bgId);
+
+          if(background !== undefined) {
+            backgroundHTML.src = background.src;
+            // sceneHtml.style.backgroundImage = 'url(' + background.src + ')';
+          }   
+        }
+
+        const charaId = parseInt(scene.character);
+        if(charaId !== undefined) {
+          const character = characters.find(c => c.id === charaId);
+          if(character !== undefined) {
+            const charaHTML = document.getElementById("chara");
+            charaHTML.src = character.src;
+          }
+        }
+
+        description.onclick = (e) => displayInteraction(scene.choices);
+      }
+
+      function displayInteraction(choicesArray) {
+        // Do not continue if no choices have been set (should be the end).
+        if (choicesArray === undefined) return;
+
+        interaction.style.display = "flex";
+        description.style.display = "none";
+        //Delete description content.
+        while (description.firstChild) {
+          description.removeChild(description.firstChild);
+        }
+
+        choicesArray.forEach( c => {
+          const newButton = document.createElement('button');
+          newButton.innerText = c.text;
+          newButton.setAttribute('id', c.goto);
+          newButton.onclick = (e) => {
+            const gotoId = parseInt(newButton.id);
+            displayDescription(gotoId);
+          }
+          const div = document.createElement('div');
+          div.className = "choice-container";
+          div.appendChild(newButton);
+          interaction.appendChild(div);
+        });
+      }
+
+      function setupEditor() {
+     
+        sceneHtml.onclick = e => {
+
+          
+
+          
+        }
+      }
+
+      const url = new URL(window.location.href);
+      const isEditor = url.searchParams.get('editor');
+      if(isEditor === "true") {
+        console.log("Is editor");
+        setupEditor();
+      }
+      // 0  = index of starting point.
+      else displayDescription(0);
+
+    </script>
+
+  </body>
+</html>

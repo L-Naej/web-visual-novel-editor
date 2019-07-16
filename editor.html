@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Visual Novel</title>
+
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+
+    <div id="screen">
+        <div id="scene">
+          <img id="background" src=""/>
+
+          <div id="edit-background">
+            <button class="edit-button">...</button>
+          </div>
+
+          <div id="character-left" class="character">
+              <button id="edit-character" class="edit-button">...</button>
+              <img id="chara" src=""/>
+          </div>
+          <div id="character-center" class="character"></div>
+          <div id="character-right" class="character">
+            <img src=""/>
+          </div>
+        </div>
+
+        <div id="ui">
+          <section id="description">
+            <p id="content"></p>
+          </section>
+          <section id="interaction"></section>
+
+        </div>
+    </div>
+
+    <div id="modal" style="display:none">
+      <h1>Edit Element</h1>
+      <h2 class="property-name"></h2>
+      <select class="property-value"></select>
+      <button class="save-button">Save</button>
+    </div>
+
+    <script>
+
+      const backgrounds = [
+        {
+          id: 1,
+          name: 'Cartoon Forest 01',
+          src: 'img/forest-backgrounds/PNG/Cartoon_Forest_BG_01/Cartoon_Forest_BG_01.png'
+        },
+        {
+          id: 2,
+          name: 'Cartoon Forest 02',
+          src: 'img/forest-backgrounds/PNG/Cartoon_Forest_BG_02/Cartoon_Forest_BG_02.png'
+        }
+      ];
+
+      const characters = [
+        {
+          id: 1,
+          name: 'Angel',
+          src: 'img/character-sprites/Fallen_Angels_2/PNG/PNG Sequences/Idle/0_Fallen_Angels_Idle_000.png'
+        },
+        {
+          id: 2,
+          name: 'Test Character',
+          src: 'img/character-sprites/test-character.png'
+        }
+      ];
+
+      const adventure = [
+        {
+          id: 0,
+          text: 'Welcome in the dungeon.',
+          background: 1,
+          character: 1,
+          choices: [
+            {
+              goto: 1,
+              text: 'Go forward.'
+            },
+            {
+              goto: 2,
+              text: 'Turn left.'
+            }
+          ]
+        },
+        {
+          id: 1,
+          text: 'You went forward.',
+          background: 2,
+          character: 2
+        },
+        {
+          id: 2,
+          text: 'You turned left.',
+          background: '',
+          character: 2
+        }
+      ];
+
+      const sceneHtml = document.getElementById("scene");
+      const backgroundHTML = document.getElementById("background");
+      const description = document.getElementById("description");
+      const descriptionContent = document.getElementById("content");
+      const interaction = document.getElementById("interaction");
+      const characterHTML = document.getElementById("chara");
+      const modal = document.getElementById("modal");
+      const btnEditBackground = document.getElementById("edit-background").getElementsByClassName("edit-button")[0];
+      const btnEditCharacter = document.getElementById("edit-character");
+      
+
+      const url = new URL(window.location.href);
+      const sceneId = parseInt(url.searchParams.get('scene'));
+      
+      // Find scene data.
+      const scene = adventure.find( s => s.id === sceneId);
+
+      // Setup modal.
+      modal.getElementsByClassName("save-button")[0].onclick = e => {
+        e.preventDefault();
+        modal.style.display = "none";
+      };
+
+      function displayModal(modalData, dataName, database, valueChangeCallback) {
+        // A <h2> element.
+        const name = modal.getElementsByClassName("property-name")[0];
+        name.innerText = modalData.propertyName;
+
+        // A <select> element.
+        const valueSelector = modal.getElementsByClassName("property-value")[0];
+        //Clean options from a precedent call.
+        while(valueSelector.firstChild)
+          valueSelector.removeChild(valueSelector.firstChild);
+        
+        valueSelector.onchange = valueChangeCallback;
+
+        database.forEach( data => {
+          const option = document.createElement("option");
+          option.value = data.id;
+          option.name = data.name;
+          option.innerText = data.name;
+          option.selected = data.id === modalData.propertyValue;
+
+          valueSelector.appendChild(option);
+        });
+
+        modal.style.display = "block";
+      }
+        
+      // Setup background.
+      backgroundHTML.src = backgrounds.find( bg => bg.id === scene.background).src;
+
+      // Setup background editor.
+      btnEditBackground.onclick = e => {
+        e.preventDefault();
+
+        const backgroundModalData = {
+          propertyName: "Background",
+          propertyValue: scene.background
+        };
+
+        displayModal(backgroundModalData, "background", backgrounds, e => {
+          scene.background = parseInt(e.target.value);
+          backgroundHTML.src = backgrounds.find(bg => bg.id === scene.background).src;
+        });
+      };
+
+
+      // Setup character.
+      characterHTML.src = characters.find(c => c.id === scene.character).src;
+
+      // Setup character editor.
+      btnEditCharacter.onclick = e => {
+        e.preventDefault();
+
+        const characterModalData = {
+          propertyName: "Character",
+          propertyValue: scene.character
+        };
+
+        displayModal(characterModalData, "character", characters, e => {
+          scene.character = parseInt(e.target.value);
+          characterHTML.src = characters.find(c => c.id === scene.character).src;
+        });
+      };
+      
+      
+      // Setup description editor
+      descriptionContent.innerText = scene.text;
+      descriptionContent.onclick = e => {
+        description.removeChild(descriptionContent);
+
+        const textarea = document.createElement('textarea');
+        textarea.innerText = scene.text;
+        const btnValidate = document.createElement('button');
+        btnValidate.innerText = 'Save';
+
+        btnValidate.onclick = e => {
+          e.preventDefault();
+          scene.text = textarea.value;
+          //Delete description content.
+          while (description.firstChild) {
+            description.removeChild(description.firstChild);
+          }
+          descriptionContent.innerText = scene.text;
+          description.appendChild(descriptionContent);
+        }
+        
+        description.appendChild(textarea);
+        description.appendChild(btnValidate);
+      }
+
+    </script>
+
+  </body>
+</html>
